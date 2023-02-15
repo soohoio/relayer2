@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/url"
 	"os"
@@ -16,7 +17,6 @@ import (
 	"github.com/spf13/cobra"
 	registry "github.com/strangelove-ventures/lens/client/chain_registry"
 	"go.uber.org/zap"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -475,6 +475,7 @@ func addChainsFromRegistry(ctx context.Context, a *appState, chains []string) er
 			Timeout:        chainConfig.Timeout,
 			OutputFormat:   chainConfig.OutputFormat,
 			SignModeStr:    chainConfig.SignModeStr,
+			ExtraCodecs:    chainConfig.ExtraCodecs,
 		}
 
 		prov, err := pcfg.NewProvider(

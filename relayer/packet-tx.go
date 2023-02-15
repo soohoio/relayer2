@@ -15,8 +15,9 @@ import (
 
 const defaultTimeoutOffset = 1000
 
-//nolint:lll
 // SendTransferMsg initiates an ics20 transfer from src to dst with the specified args
+//
+//nolint:lll
 func (c *Chain) SendTransferMsg(ctx context.Context, log *zap.Logger, dst *Chain, amount sdk.Coin, dstAddr string, toHeightOffset uint64, toTimeOffset time.Duration, srcChannel *chantypes.IdentifiedChannel) error {
 	var (
 		timeoutHeight    uint64
