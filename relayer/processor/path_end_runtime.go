@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	conntypes "github.com/cosmos/ibc-go/v3/modules/core/03-connection/types"
-	chantypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+	conntypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
+	chantypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	"github.com/cosmos/relayer/v2/relayer/provider"
 	"go.uber.org/zap"
 )
@@ -338,6 +338,30 @@ func (pathEnd *pathEndRuntime) shouldSendPacketMessage(message packetIBCMessage,
 		)
 		return false
 	}
+
+	removeRetention := func() {
+		// giving up on sending this packet flow message
+		// remove all retention of this connection handshake in pathEnd.messagesCache.PacketFlow and counterparty
+		toDelete := make(map[string][]uint64)
+		toDeleteCounterparty := make(map[string][]uint64)
+		switch eventType {
+		case chantypes.EventTypeRecvPacket:
+			toDelete[eventType] = []uint64{sequence}
+			toDeleteCounterparty[chantypes.EventTypeSendPacket] = []uint64{sequence}
+		case chantypes.EventTypeAcknowledgePacket, chantypes.EventTypeTimeoutPacket, chantypes.EventTypeTimeoutPacketOnClose:
+			toDelete[eventType] = []uint64{sequence}
+			toDeleteCounterparty[chantypes.EventTypeRecvPacket] = []uint64{sequence}
+			toDelete[chantypes.EventTypeSendPacket] = []uint64{sequence}
+		}
+		// delete in progress send for this specific message
+		pathEnd.packetProcessing[k].deleteMessages(map[string][]uint64{
+			eventType: {sequence},
+		})
+		// delete all packet flow retention history for this sequence
+		pathEnd.messageCache.PacketFlow[k].DeleteMessages(toDelete)
+		counterparty.messageCache.PacketFlow[k].DeleteMessages(toDeleteCounterparty)
+	}
+
 	if message.info.Height >= counterparty.latestBlock.Height {
 		pathEnd.log.Debug("Waiting to relay packet message until counterparty height has incremented",
 			zap.String("event_type", eventType),
@@ -353,6 +377,7 @@ func (pathEnd *pathEndRuntime) shouldSendPacketMessage(message packetIBCMessage,
 			zap.Uint64("sequence", sequence),
 			zap.Inline(k),
 		)
+		removeRetention()
 		return false
 	}
 	msgProcessCache, ok := pathEnd.packetProcessing[k]
@@ -389,24 +414,7 @@ func (pathEnd *pathEndRuntime) shouldSendPacketMessage(message packetIBCMessage,
 			zap.Inline(k),
 			zap.Int("max_retries", maxMessageSendRetries),
 		)
-		// giving up on sending this packet flow message
-		// remove all retention of this connection handshake in pathEnd.messagesCache.PacketFlow and counterparty
-		toDelete := make(map[string][]uint64)
-		toDeleteCounterparty := make(map[string][]uint64)
-		switch eventType {
-		case chantypes.EventTypeRecvPacket:
-			toDelete[eventType] = []uint64{sequence}
-			toDeleteCounterparty[chantypes.EventTypeSendPacket] = []uint64{sequence}
-		case chantypes.EventTypeAcknowledgePacket, chantypes.EventTypeTimeoutPacket, chantypes.EventTypeTimeoutPacketOnClose:
-			toDelete[eventType] = []uint64{sequence}
-			toDeleteCounterparty[chantypes.EventTypeRecvPacket] = []uint64{sequence}
-			toDelete[chantypes.EventTypeSendPacket] = []uint64{sequence}
-		}
-		// delete in progress send for this specific message
-		pathEnd.packetProcessing[k].deleteMessages(map[string][]uint64{eventType: []uint64{sequence}})
-		// delete all packet flow retention history for this sequence
-		pathEnd.messageCache.PacketFlow[k].DeleteMessages(toDelete)
-		counterparty.messageCache.PacketFlow[k].DeleteMessages(toDeleteCounterparty)
+		removeRetention()
 		return false
 	}
 
@@ -457,7 +465,7 @@ func (pathEnd *pathEndRuntime) shouldSendConnectionMessage(message connectionIBC
 		toDeleteCounterparty := make(map[string][]ConnectionKey)
 		counterpartyKey := k.Counterparty()
 		switch eventType {
-		case conntypes.EventTypeConnectionOpenInit:
+		case conntypes.EventTypeConnectionOpenTry:
 			toDeleteCounterparty[conntypes.EventTypeConnectionOpenInit] = []ConnectionKey{counterpartyKey.MsgInitKey()}
 		case conntypes.EventTypeConnectionOpenAck:
 			toDeleteCounterparty[conntypes.EventTypeConnectionOpenTry] = []ConnectionKey{counterpartyKey}
@@ -468,7 +476,7 @@ func (pathEnd *pathEndRuntime) shouldSendConnectionMessage(message connectionIBC
 			toDeleteCounterparty[conntypes.EventTypeConnectionOpenInit] = []ConnectionKey{counterpartyKey.MsgInitKey()}
 		}
 		// delete in progress send for this specific message
-		pathEnd.connProcessing.deleteMessages(map[string][]ConnectionKey{eventType: []ConnectionKey{k}})
+		pathEnd.connProcessing.deleteMessages(map[string][]ConnectionKey{eventType: {k}})
 
 		// delete all connection handshake retention history for this connection
 		pathEnd.messageCache.ConnectionHandshake.DeleteMessages(toDelete)

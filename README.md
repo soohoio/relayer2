@@ -227,4 +227,3 @@ experience for contributors. Please visit [Code of Conduct](CODE_OF_CONDUCT.md) 
 ---
 
 [Create Path Across Chains -->](docs/create-path-across-chain.md)
-# relayer
