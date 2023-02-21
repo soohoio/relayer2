@@ -524,6 +524,8 @@ github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6Mwd
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
 github.com/soohoio/stayking v1.0.0 h1:pGwHqGjK82Z/IkfjLVKVsE+ThZAEzpTM8gcQEMkOnjY=
 github.com/soohoio/stayking v1.0.0/go.mod h1:JncjKFPoCU51njzOWEd9630x/1eb/vT4k1rJaji0Dtw=
+github.com/soohoio/stayking v1.1.0 h1:dg+s5pV/CH8kScQtROjLeHcx1mr0lJmJjeq7mToWQ88=
+github.com/soohoio/stayking v1.1.0/go.mod h1:zXfTl2Dtp/r6bCznPlOtAYOYDMKZaMKGyzpwc9lKDOg=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/spaolacci/murmur3 v1.1.0 h1:7c1g84S4BPRrfL5Xrdp6fOJ206sU9y293DDHaoy0bLI=
 github.com/spaolacci/murmur3 v1.1.0/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=

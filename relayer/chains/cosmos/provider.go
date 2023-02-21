@@ -3,7 +3,6 @@ package cosmos
 import (
 	"context"
 	"fmt"
-	"github.com/soohoio/stayking/x/interchainquery"
 	"os"
 	"sync"
 	"time"
